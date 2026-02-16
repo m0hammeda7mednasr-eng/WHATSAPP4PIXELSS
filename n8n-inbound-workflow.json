@@ -1,0 +1,145 @@
+{
+  "name": "WhatsApp Inbound Messages",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-inbound",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook - Receive from WhatsApp",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "your-webhook-id"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Parse WhatsApp webhook data\nconst body = $input.item.json.body;\n\n// Extract message data\nconst entry = body.entry?.[0];\nconst changes = entry?.changes?.[0];\nconst value = changes?.value;\nconst messages = value?.messages?.[0];\nconst contacts = value?.contacts?.[0];\n\nif (!messages) {\n  return { json: { error: 'No message found' } };\n}\n\n// Extract fields\nconst wa_id = messages.from; // Customer's WhatsApp ID\nconst phone_number_id = value.metadata?.phone_number_id; // Your WhatsApp Business Phone ID\nconst message_type = messages.type; // text, image, etc.\nconst timestamp = messages.timestamp;\n\n// Get message body based on type\nlet body_text = '';\nlet media_url = null;\n\nif (message_type === 'text') {\n  body_text = messages.text?.body || '';\n} else if (message_type === 'image') {\n  body_text = messages.image?.caption || '';\n  media_url = messages.image?.id; // You'll need to download this\n} else if (message_type === 'interactive') {\n  // Button reply\n  body_text = messages.interactive?.button_reply?.title || messages.interactive?.list_reply?.title || '';\n}\n\n// Get contact name\nconst contact_name = contacts?.profile?.name || wa_id;\n\nreturn {\n  json: {\n    wa_id,\n    phone_number_id,\n    message_type,\n    body: body_text,\n    media_url,\n    contact_name,\n    timestamp,\n    wa_message_id: messages.id\n  }\n};"
+      },
+      "name": "Parse WhatsApp Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id FROM brands WHERE phone_number_id = '{{ $json.phone_number_id }}' LIMIT 1",
+        "options": {}
+      },
+      "name": "Get Brand ID",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [650, 300],
+      "credentials": {
+        "postgres": {
+          "id": "your-postgres-credential-id",
+          "name": "Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO contacts (brand_id, wa_id, name, last_message_at)\nVALUES ('{{ $node[\"Get Brand ID\"].json[0].id }}', '{{ $node[\"Parse WhatsApp Data\"].json.wa_id }}', '{{ $node[\"Parse WhatsApp Data\"].json.contact_name }}', NOW())\nON CONFLICT (brand_id, wa_id) \nDO UPDATE SET \n  name = EXCLUDED.name,\n  last_message_at = NOW()\nRETURNING id",
+        "options": {}
+      },
+      "name": "Create or Update Contact",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [850, 300],
+      "credentials": {
+        "postgres": {
+          "id": "your-postgres-credential-id",
+          "name": "Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO messages (\n  contact_id,\n  brand_id,\n  direction,\n  message_type,\n  body,\n  media_url,\n  status,\n  wa_message_id,\n  created_at\n)\nVALUES (\n  '{{ $node[\"Create or Update Contact\"].json[0].id }}',\n  '{{ $node[\"Get Brand ID\"].json[0].id }}',\n  'inbound',\n  '{{ $node[\"Parse WhatsApp Data\"].json.message_type }}',\n  '{{ $node[\"Parse WhatsApp Data\"].json.body }}',\n  '{{ $node[\"Parse WhatsApp Data\"].json.media_url }}',\n  'delivered',\n  '{{ $node[\"Parse WhatsApp Data\"].json.wa_message_id }}',\n  NOW()\n)\nRETURNING *",
+        "options": {}
+      },
+      "name": "Insert Message",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [1050, 300],
+      "credentials": {
+        "postgres": {
+          "id": "your-postgres-credential-id",
+          "name": "Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": true, \"message_id\": $json[0].id } }}"
+      },
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    }
+  ],
+  "connections": {
+    "Webhook - Receive from WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Parse WhatsApp Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse WhatsApp Data": {
+      "main": [
+        [
+          {
+            "node": "Get Brand ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Brand ID": {
+      "main": [
+        [
+          {
+            "node": "Create or Update Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create or Update Contact": {
+      "main": [
+        [
+          {
+            "node": "Insert Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Message": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
