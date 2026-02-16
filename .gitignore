@@ -1,49 +1,130 @@
-# Dependencies
+# ============================================
+# DEPENDENCIES
+# ============================================
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
-# Environment variables
+# ============================================
+# ENVIRONMENT VARIABLES (CRITICAL - NEVER COMMIT)
+# ============================================
 .env
 .env.local
+.env.development
 .env.development.local
+.env.test
 .env.test.local
+.env.production
 .env.production.local
+.env.*.local
 
-# Build outputs
+# ============================================
+# BUILD OUTPUTS
+# ============================================
 dist/
+dist-ssr/
 build/
 .vite/
+*.local
 
-# IDE
+# ============================================
+# IDE & EDITORS
+# ============================================
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
 
-# OS
+# ============================================
+# OPERATING SYSTEM
+# ============================================
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+Desktop.ini
 
-# Logs
+# ============================================
+# LOGS
+# ============================================
 logs/
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Temporary files
+# ============================================
+# TEMPORARY FILES
+# ============================================
 *.tmp
 *.temp
+*.bak
+*.swp
+*~.nib
+.cache/
 
-# ngrok
+# ============================================
+# TESTING
+# ============================================
+coverage/
+.nyc_output/
+*.lcov
+.jest/
+
+# ============================================
+# NGROK & TUNNELING
+# ============================================
 ngrok.exe
 ngrok
+ngrok.zip
+*.ngrok.io
 
-# Database
+# ============================================
+# DATABASE
+# ============================================
 *.db
 *.sqlite
+*.sqlite3
 
-# Sensitive data (DO NOT COMMIT)
+# ============================================
+# SENSITIVE DATA (CRITICAL - NEVER COMMIT)
+# ============================================
 **/credentials.json
 **/secrets.json
 **/*-secret-*
+**/*-private-*
+**/tokens.json
+**/*.pem
+**/*.key
+**/*.cert
+**/*.p12
+
+# ============================================
+# DEPLOYMENT
+# ============================================
+.vercel
+.netlify
+.railway
+
+# ============================================
+# MISC
+# ============================================
+.turbo
+.next/
+out/

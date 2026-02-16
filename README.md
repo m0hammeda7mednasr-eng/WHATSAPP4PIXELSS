@@ -1,4 +1,10 @@
-# 🌙 WhatsApp CRM System
+# 🌙 WhatsApp CRM System v2.0
+
+> Production-ready WhatsApp CRM with Shopify integration, interactive messages, and automated order management.
+
+[![CI](https://github.com/m0hammeda7mednasr-eng/WHATSAPP4PIXELSS/workflows/CI/badge.svg)](https://github.com/m0hammeda7mednasr-eng/WHATSAPP4PIXELSS/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
 
 نظام CRM متكامل لإدارة طلبات Shopify عبر WhatsApp مع رسائل تفاعلية وأزرار تأكيد/إلغاء
 
@@ -16,53 +22,58 @@
 
 ### المتطلبات
 
-- Node.js (v16 أو أحدث)
-- npm أو yarn
+- Node.js >= 18.0.0
+- npm >= 9.0.0
 - حساب Supabase
 - حساب WhatsApp Business API
 - متجر Shopify (اختياري)
 
 ### التثبيت
 
-1. **Clone المشروع:**
 ```bash
-git clone https://github.com/m0hammeda7mednasr-eng/wahtsapp-.git
-cd wahtsapp-
-```
+# Clone المشروع
+git clone https://github.com/m0hammeda7mednasr-eng/WHATSAPP4PIXELSS.git
+cd WHATSAPP4PIXELSS/wahtsapp-main
 
-2. **تثبيت Dependencies:**
-```bash
+# تثبيت Dependencies
 npm install
-```
 
-3. **إعداد Environment Variables:**
-```bash
-# انسخ ملف .env.example إلى .env
-copy .env.example .env
-
+# إعداد Environment Variables
+cp .env.example .env
 # عدل .env وضع بياناتك
+
+# إعداد Database
+# شغل ملف COMPLETE-DATABASE-SETUP.sql في Supabase SQL Editor
+
+# تشغيل النظام الكامل
+npm run dev:all
 ```
 
-4. **إعداد Database:**
-- افتح Supabase SQL Editor
-- شغل ملف `COMPLETE-DATABASE-SETUP.sql`
+### الأوامر المتاحة
 
-5. **تشغيل النظام:**
 ```bash
-# الطريقة الأسهل - ملف واحد يشغل كل شيء
-START-COMPLETE-SYSTEM.bat
+# تشغيل كل شيء (Frontend + Backend + Cron)
+npm run dev:all
 
-# أو يدوياً:
-# Terminal 1 - Backend
-cd server
-node webhook-server-simple.js
-
-# Terminal 2 - Cron Job
-cd server
-node cron-reminder.js
-
-# Terminal 3 - Frontend
+# Frontend فقط
 npm run dev
+
+# Backend فقط
+npm run dev:server
+
+# Cron Job فقط
+npm run dev:cron
+
+# Build للإنتاج
+npm run build
+
+# Tests
+npm test
+npm run test:coverage
+
+# Linting & Formatting
+npm run lint
+npm run format
 ```
 
 ## 📋 كيف يعمل النظام
@@ -138,25 +149,36 @@ TEST-INTERACTIVE-BUTTONS.bat
 
 ```
 wahtsapp-main/
-├── server/
-│   ├── webhook-server-simple.js    # Backend الرئيسي
-│   └── cron-reminder.js             # Cron Job للتذكير
+├── server/                    # Backend (Node.js + Express)
+│   ├── config/               # Configuration & env validation
+│   ├── controllers/          # Request handlers
+│   ├── db/                   # Database client (Supabase)
+│   ├── jobs/                 # Background jobs (cron)
+│   ├── middleware/           # Express middleware
+│   ├── routes/               # API routes
+│   ├── services/             # Business logic (WhatsApp, Shopify)
+│   ├── utils/                # Utilities (logger, errors, validation)
+│   └── index.js              # Server entry point
 │
-├── src/
-│   ├── components/
-│   │   ├── ChatWindow.jsx           # واجهة المحادثات
-│   │   ├── TemplateSettings.jsx     # صفحة التخصيص
-│   │   ├── MessageTemplates.jsx     # إدارة Templates
-│   │   └── ShopifyOAuth.jsx         # ربط Shopify
-│   ├── context/
-│   │   └── BrandContext.jsx         # إدارة Brands
-│   └── lib/
-│       └── supabaseClient.js        # Supabase Client
+├── src/                      # Frontend (React + Vite)
+│   ├── components/           # React components
+│   ├── config/               # Frontend configuration
+│   ├── context/              # React context
+│   └── lib/                  # Libraries
 │
-├── COMPLETE-DATABASE-SETUP.sql      # Database Setup
-├── START-COMPLETE-SYSTEM.bat        # تشغيل كل شيء
-├── .env.example                     # مثال Environment Variables
-└── README.md                        # هذا الملف
+├── docs/                     # Documentation
+│   ├── README.md            # Main documentation
+│   ├── ARCHITECTURE.md      # System architecture
+│   ├── API.md               # API reference
+│   └── DEPLOYMENT.md        # Deployment guide
+│
+├── .github/                  # GitHub Actions
+│   └── workflows/           # CI/CD pipelines
+│
+├── COMPLETE-DATABASE-SETUP.sql  # Database setup script
+├── .env.example             # Environment variables template
+├── package.json             # Dependencies & scripts
+└── README.md                # This file
 ```
 
 ## 🔧 استكشاف الأخطاء
@@ -164,33 +186,39 @@ wahtsapp-main/
 ### الرسالة بدون أزرار
 ```bash
 # تأكد من Backend شغال
-cd server
-node webhook-server-simple.js
+npm run dev:server
 
 # لازم تشوف في Console:
-# "Message type: Interactive with buttons"
+# "Server started successfully"
 ```
 
 ### الأزرار ما تشتغل
 ```bash
 # تأكد من:
-1. ngrok شغال: ngrok http 3001
-2. Webhook URL صحيح في Meta
-3. Verify Token = "whatsapp_crm_2024"
+1. Webhook URL صحيح في Meta
+2. Verify Token = قيمة WEBHOOK_VERIFY_TOKEN في .env
+3. Server شغال ومتصل بالإنترنت
 ```
 
 ### التذكير ما يشتغل
 ```bash
 # شغل Cron Job:
-cd server
-node cron-reminder.js
+npm run dev:cron
 ```
 
-## 📚 الوثائق
+### مشاكل Environment Variables
+```bash
+# Server سيفشل في البداية إذا كانت المتغيرات ناقصة
+# راجع الرسائل في Console وأكمل المتغيرات المطلوبة
+```
 
-- [دليل التنفيذ الكامل](COMPLETE-IMPLEMENTATION-GUIDE.md)
-- [دليل النظام النهائي](FINAL-SYSTEM-README.md)
-- [دليل Shopify Setup](SHOPIFY-SETUP-GUIDE.md)
+## 📚 الوثائق الكاملة
+
+- [📖 Architecture](./docs/ARCHITECTURE.md) - معمارية النظام والتصميم
+- [📡 API Reference](./docs/API.md) - توثيق كامل للـ API
+- [🚀 Deployment](./docs/DEPLOYMENT.md) - دليل النشر على السيرفرات
+- [🤝 Contributing](./CONTRIBUTING.md) - كيفية المساهمة في المشروع
+- [📝 Changelog](./CHANGELOG.md) - سجل التغييرات
 
 ## 🛠️ التقنيات المستخدمة
 
@@ -202,11 +230,58 @@ node cron-reminder.js
 
 ## 🔐 الأمان
 
-- ✅ Environment variables للبيانات الحساسة
+- ✅ Environment variable validation (Zod)
+- ✅ Rate limiting (100 req/15min)
+- ✅ PII masking in logs
+- ✅ Input validation & sanitization
+- ✅ Webhook signature verification
+- ✅ CORS configuration
+- ✅ Error handling without data leaks
 - ✅ Row Level Security (RLS) في Supabase
 - ✅ OAuth 2.0 لـ Shopify
-- ✅ Webhook verification
 - ✅ `.gitignore` لحماية الملفات الحساسة
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+npm test
+
+# Watch mode
+npm run test:watch
+
+# Coverage report
+npm run test:coverage
+```
+
+## 🚀 Deployment
+
+المشروع جاهز للنشر على:
+- Railway (موصى به)
+- Render
+- Heroku
+- VPS (DigitalOcean, AWS, etc.)
+
+راجع [دليل النشر الكامل](./docs/DEPLOYMENT.md) للتفاصيل.
+
+## 🆕 What's New in v2.0
+
+### Major Improvements
+- ♻️ Complete code refactoring
+- 🔐 Enhanced security (validation, rate limiting, PII masking)
+- 📊 Structured logging with correlation IDs
+- 🔄 Retry logic for external APIs
+- 🧪 Testing infrastructure
+- 📚 Comprehensive documentation
+- 🚀 CI/CD pipeline
+- 🏗️ Modular architecture
+
+### Breaking Changes
+- Server entry point changed to `server/index.js`
+- Environment variables now validated on startup
+- Hardcoded credentials removed
+
+راجع [CHANGELOG.md](./CHANGELOG.md) للتفاصيل الكاملة.
 
 ## 📝 License
 
